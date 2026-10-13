@@ -1,0 +1,5 @@
+{"split": "dev", "subject": "astronomy", "question": "Closest star to Earth?", "choices": ["Sirius", "The Sun", "Vega", "Polaris"], "answer": 1}
+{"split": "test", "subject": "astronomy", "question": "Which planet is largest?", "choices": ["Mars", "Venus", "Jupiter", "Mercury"], "answer": 2}
+{"split": "test", "subject": "astronomy", "question": "Red planet?", "choices": ["Mars", "Venus", "Jupiter", "Mercury"], "answer": 0}
+{"split": "test", "subject": "computer_security", "question": "Which is a hash function?", "choices": ["AES", "RSA", "SHA-256", "TLS"], "answer": 2}
+{"split": "test", "subject": "computer_security", "question": "Port for HTTPS?", "choices": ["21", "443", "80", "25"], "answer": 1}

@@ -1,0 +1,12 @@
+# Same model, same 14k MMLU questions, four surface formats of the prompt.
+# If the spread between variants is larger than the confidence interval,
+# a single reported MMLU number says as much about the prompt as about the model.
+run_name: prompt_sensitivity
+output_dir: results/prompt_sensitivity
+models:
+  - {backend: hf, pretrained: Qwen/Qwen2.5-1.5B-Instruct, batch_size: 64}
+tasks:
+  - {name: mmlu, label: mmlu/standard, prompt_variant: standard}
+  - {name: mmlu, label: mmlu/instruction, prompt_variant: instruction}
+  - {name: mmlu, label: mmlu/parenthesis, prompt_variant: parenthesis}
+  - {name: mmlu, label: mmlu/lowercase_label, prompt_variant: lowercase_label}
