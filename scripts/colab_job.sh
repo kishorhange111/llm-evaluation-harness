@@ -43,4 +43,4 @@ for job in "$@"; do
   fi
 done
 
-echo "DONE $(date -u +%T)"; cat results/failures.txt 2>/dev/null
+echo "DONE $(date -u +%T)"; cat results/failures.txt 2>/dev/null || true
