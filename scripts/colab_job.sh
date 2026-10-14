@@ -31,6 +31,9 @@ for job in "$@"; do
     python scripts/judge_experiment.py --out results/judge 2>&1 | tee "results/judge.log"
   else
     evalkit run "configs/$job.yaml" 2>&1 | tee "results/$job.log"
+    if [ "$job" = "validate_vs_lm_eval" ]; then
+      python scripts/compare_lm_eval.py results/validate_vs_lm_eval/summary.json | tee -a "results/$job.log"
+    fi
   fi
 done
 
