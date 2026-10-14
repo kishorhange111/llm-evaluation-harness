@@ -1,0 +1,13 @@
+# Validation: does evalkit reproduce EleutherAI lm-evaluation-harness?
+# Same model and settings as the lm-eval run in mini-chatgpt (results/benchmarks.json,
+# "base" row): Qwen2.5-0.5B base model, no chat template, 0-shot, full test sets.
+# scripts/compare_lm_eval.py prints the differences; agreement within about one
+# point is expected (small gaps come from tokenisation and batching details).
+run_name: validate_vs_lm_eval
+output_dir: results/validate_vs_lm_eval
+models:
+  - {backend: hf, pretrained: Qwen/Qwen2.5-0.5B, chat: false, batch_size: 64, label: Qwen2.5-0.5B}
+tasks:
+  - {name: mmlu, num_fewshot: 0}
+  - {name: arc_challenge, num_fewshot: 0}
+  - {name: hellaswag, num_fewshot: 0}

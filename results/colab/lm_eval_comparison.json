@@ -1,0 +1,32 @@
+[
+  {
+    "metric": "mmlu/acc",
+    "lm_eval": 0.4749,
+    "evalkit": 0.47172767412049565,
+    "diff_points": -0.32
+  },
+  {
+    "metric": "arc_challenge/acc",
+    "lm_eval": 0.2935,
+    "evalkit": 0.29266211604095566,
+    "diff_points": -0.08
+  },
+  {
+    "metric": "arc_challenge/acc_norm",
+    "lm_eval": 0.3234,
+    "evalkit": 0.3191126279863481,
+    "diff_points": -0.43
+  },
+  {
+    "metric": "hellaswag/acc",
+    "lm_eval": 0.4053,
+    "evalkit": 0.4047002589125672,
+    "diff_points": -0.06
+  },
+  {
+    "metric": "hellaswag/acc_norm",
+    "lm_eval": 0.5215,
+    "evalkit": 0.5222067317267477,
+    "diff_points": 0.07
+  }
+]

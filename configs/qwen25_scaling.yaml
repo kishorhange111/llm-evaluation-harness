@@ -1,0 +1,17 @@
+# How does capability scale with size inside one model family?
+# Qwen2.5-Instruct 0.5B -> 7B on knowledge (MMLU), reasoning (ARC, GSM8K),
+# commonsense (HellaSwag) and code (HumanEval). Full test sets, no sub-sampling.
+# The first model is the baseline for the paired significance tests.
+run_name: qwen25_scaling
+output_dir: results/qwen25_scaling
+models:
+  - {backend: hf, pretrained: Qwen/Qwen2.5-0.5B-Instruct, chat: true, batch_size: 64}
+  - {backend: hf, pretrained: Qwen/Qwen2.5-1.5B-Instruct, chat: true, batch_size: 64}
+  - {backend: hf, pretrained: Qwen/Qwen2.5-3B-Instruct, chat: true, batch_size: 48}
+  - {backend: hf, pretrained: Qwen/Qwen2.5-7B-Instruct, chat: true, batch_size: 32}
+tasks:
+  - {name: mmlu, num_fewshot: 5}
+  - {name: arc_challenge, num_fewshot: 0}
+  - {name: hellaswag, num_fewshot: 0}
+  - {name: gsm8k, chat: true, num_fewshot: 0}
+  - {name: humaneval, chat: true}

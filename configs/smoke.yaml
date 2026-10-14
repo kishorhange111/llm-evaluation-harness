@@ -1,0 +1,11 @@
+# Two-minute end-to-end check on any GPU (or CPU): tiny model, 20 examples per task.
+run_name: smoke
+output_dir: results/smoke
+models:
+  - {backend: hf, pretrained: Qwen/Qwen2.5-0.5B-Instruct, chat: true, batch_size: 16, dtype: bfloat16}
+tasks:
+  - {name: gsm8k, chat: true, limit: 20}
+  - {name: mmlu, num_fewshot: 5, limit: 20}
+  - {name: arc_challenge, limit: 20}
+  - {name: hellaswag, limit: 20}
+  - {name: humaneval, chat: true, limit: 20}
