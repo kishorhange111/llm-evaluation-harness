@@ -61,6 +61,21 @@ def test_batched_loglikelihood_matches_reference(tiny_model_dir):
     assert [g.num_tokens for g in got] == [1, 2, 1, 5]
 
 
+def test_token_budget_and_empty_context(tiny_model_dir):
+    """A tiny token budget forces one row per batch; scores must not change. An empty context scores from EOS."""
+    big = HFModel(tiny_model_dir, batch_size=8, dtype="float32", device_map="cpu")
+    small = HFModel(tiny_model_dir, batch_size=8, dtype="float32", device_map="cpu", max_batch_tokens=4)
+    reqs = [
+        LoglikelihoodRequest("the cat sat on", " mat"),
+        LoglikelihoodRequest("a dog", " ran to park"),
+        LoglikelihoodRequest("", "the cat"),
+    ]
+    for a, b in zip(big.loglikelihood(reqs), small.loglikelihood(reqs)):
+        assert a.logprob == pytest.approx(b.logprob, abs=1e-4)
+    assert big._encode_pair("", "the cat")[0] == [big.tokenizer.eos_token_id]
+    assert big.loglikelihood(reqs[2:])[0].num_tokens == 2
+
+
 def test_batched_generation_matches_unbatched(tiny_model_dir):
     m = HFModel(tiny_model_dir, batch_size=4, dtype="float32", device_map="cpu")
     prompts = ["the cat", "a dog ran to the park", "question"]

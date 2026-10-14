@@ -32,13 +32,18 @@ class ExecutionResult:
     stderr_tail: str
 
 
-def _limit_resources(memory_mb: int) -> None:  # pragma: no cover - runs in the child process
-    """Called in the child just before exec; caps memory and disables core dumps."""
-    import resource
-
-    limit = memory_mb * 1024 * 1024
-    resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
-    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+# The child sets its own limits, then runs the program. Doing it in the child's
+# own code (rather than with subprocess's preexec_fn) is safe when run_python is
+# called from many threads at once: preexec_fn can deadlock in a threaded parent.
+_BOOTSTRAP = """
+import resource, runpy, sys
+limit = int(sys.argv[2]) * 1024 * 1024
+if limit > 0:
+    resource.setrlimit(resource.RLIMIT_AS, (limit, limit))  # cap memory
+resource.setrlimit(resource.RLIMIT_CORE, (0, 0))  # no core dumps
+sys.argv = [sys.argv[1]]
+runpy.run_path(sys.argv[0], run_name="__main__")
+"""
 
 
 def run_python(program: str, timeout: float = 10.0, memory_mb: int = 1024) -> ExecutionResult:
@@ -53,16 +58,18 @@ def run_python(program: str, timeout: float = 10.0, memory_mb: int = 1024) -> Ex
         path = os.path.join(tmp, "program.py")
         with open(path, "w") as f:
             f.write(program)
-        preexec = (lambda: _limit_resources(memory_mb)) if sys.platform.startswith("linux") else None
+        if sys.platform.startswith("linux"):
+            cmd = [sys.executable, "-I", "-c", _BOOTSTRAP, path, str(memory_mb)]
+        else:  # the resource module is POSIX-only; elsewhere run without the memory cap
+            cmd = [sys.executable, "-I", path]
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", path],
+                cmd,
                 cwd=tmp,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
                 env={"PATH": "/usr/bin:/bin", "PYTHONHASHSEED": "0"},
-                preexec_fn=preexec,  # noqa: PLW1509 - no threads are running at this point
             )
         except subprocess.TimeoutExpired:
             return ExecutionResult(False, True, "timeout")

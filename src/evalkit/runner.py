@@ -109,8 +109,17 @@ def compare_to_baseline(per_model: dict[str, dict[str, list[ExampleResult]]]) ->
 
 
 def free_model(model: Model) -> None:
-    """Release GPU memory before loading the next model."""
-    del model
+    """Release GPU memory before loading the next model.
+
+    ``del model`` here would only drop this function's own reference; the
+    caller's variable still keeps the weights alive. So we detach the heavy
+    attributes from the wrapper object itself, then collect.
+    """
+    # CachedModel wraps another Model in ``.inner``; unwrap to reach the one holding the weights.
+    while getattr(model, "inner", None) is not None:
+        model = model.inner  # type: ignore[attr-defined]
+    if getattr(model, "model", None) is not None:
+        model.model = None  # type: ignore[attr-defined]
     gc.collect()
     try:
         import torch

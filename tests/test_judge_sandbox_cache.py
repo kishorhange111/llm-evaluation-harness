@@ -1,5 +1,9 @@
 """Tests for LLM-as-judge debiasing, the code sandbox and the response cache."""
 
+import sys
+
+import pytest
+
 from evalkit.cache import CachedModel
 from evalkit.metrics.judge import combine_verdicts, judge_pairwise, parse_verdict, win_rate
 from evalkit.models import DummyModel
@@ -53,6 +57,19 @@ def test_sandbox_pass_fail_and_timeout():
 def test_sandbox_does_not_leak_environment(monkeypatch):
     monkeypatch.setenv("SECRET_TOKEN", "hunter2")
     assert run_python("import os; assert 'SECRET_TOKEN' not in os.environ").passed
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="memory cap is Linux-only")
+def test_sandbox_memory_cap_and_main_guard():
+    assert not run_python("x = bytearray(2 * 1024**3)", memory_mb=256).passed  # 2 GB under a 256 MB cap
+    assert run_python("assert __name__ == '__main__'").passed
+
+
+def test_sandbox_is_thread_safe():
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        assert all(r.passed for r in pool.map(lambda i: run_python(f"assert {i} == {i}"), range(32)))
 
 
 # ------------------------------------------------------------------- cache

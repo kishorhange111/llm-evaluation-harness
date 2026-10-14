@@ -69,7 +69,12 @@ class Task(ABC):
             return rows
         from datasets import load_dataset  # lazy import: heavy, and not needed in unit tests
 
-        return list(load_dataset(self.hf_path, self.hf_name, split=split))
+        try:
+            return list(load_dataset(self.hf_path, self.hf_name, split=split))
+        except Exception:  # noqa: BLE001
+            # datasets >= 4 no longer runs Python loading scripts. The Hub keeps an
+            # auto-converted Parquet copy of script-based datasets (e.g. Rowan/hellaswag) on this branch.
+            return list(load_dataset(self.hf_path, self.hf_name, split=split, revision="refs/convert/parquet"))
 
     def examples(self) -> list[Example]:
         """Load, convert and (optionally) sub-sample the evaluation examples."""
@@ -155,10 +160,15 @@ class MultipleChoiceTask(Task):
 
     Reported metrics:
         accuracy: argmax of the raw log-probability.
-        accuracy_norm: argmax of log-probability divided by the option's token
-            count. Raw log-probs favour short options (fewer tokens means fewer
-            negative terms in the sum); normalising removes that bias, which
-            matters a lot for HellaSwag-style tasks with long options.
+        accuracy_norm: argmax of log-probability divided by the option's length
+            in characters (lm-evaluation-harness's convention, so numbers are
+            comparable). Raw log-probs favour short options (fewer negative
+            terms in the sum); normalising removes that bias, which matters a
+            lot for HellaSwag-style tasks with long options.
+
+    Each example's ``score`` is correctness under the task's ``primary_metric``,
+    so confidence intervals and paired significance tests describe the same
+    number the report headlines.
     """
 
     primary_metric = "accuracy"
@@ -178,28 +188,31 @@ class MultipleChoiceTask(Task):
     def evaluate(self, model: Model, examples: list[Example]) -> list[ExampleResult]:
         # Flatten every (example, option) pair into one list so the backend can batch
         # across examples, then regroup the answers afterwards.
-        requests, spans = [], []
+        requests, spans, option_chars = [], [], []
         for ex in examples:
             ctx, opts = self.build_context(ex), self.choices(ex)
             spans.append((len(requests), len(opts)))
             requests.extend(LoglikelihoodRequest(ctx, o) for o in opts)
+            option_chars.append([len(o) for o in opts])
         scored = model.loglikelihood(requests)
 
         results = []
-        for ex, (start, count) in zip(examples, spans):
+        for ex, (start, count), chars in zip(examples, spans, option_chars):
             lls = scored[start : start + count]
             raw = [r.logprob for r in lls]
-            norm = [r.logprob / max(r.num_tokens, 1) for r in lls]
+            norm = [r.logprob / max(c, 1) for r, c in zip(lls, chars)]
             pred = max(range(count), key=raw.__getitem__)
             pred_norm = max(range(count), key=norm.__getitem__)
             gold = self.gold_index(ex)
+            correct, correct_norm = float(pred == gold), float(pred_norm == gold)
+            use_norm = self.primary_metric == "accuracy_norm"
             results.append(
                 ExampleResult(
                     id=ex.id,
-                    score=float(pred == gold),
-                    prediction=pred,
+                    score=correct_norm if use_norm else correct,
+                    prediction=pred_norm if use_norm else pred,
                     target=gold,
-                    extra={"correct_norm": float(pred_norm == gold), "logprobs": raw},
+                    extra={"correct": correct, "correct_norm": correct_norm, "logprobs": raw},
                 )
             )
         return results
@@ -209,6 +222,6 @@ class MultipleChoiceTask(Task):
             return {"accuracy": float("nan"), "accuracy_norm": float("nan")}
         n = len(results)
         return {
-            "accuracy": sum(r.score for r in results) / n,
+            "accuracy": sum(r.extra["correct"] for r in results) / n,
             "accuracy_norm": sum(r.extra["correct_norm"] for r in results) / n,
         }
