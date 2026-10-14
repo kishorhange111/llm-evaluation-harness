@@ -1,0 +1,50 @@
+{
+  "run_name": "validate_vs_lm_eval",
+  "environment": {
+    "evalkit": "0.1.0",
+    "python": "3.13.15",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "git_sha": "a9a0c099e1b40b909cdd1dc57d04a67e9b2ee1f5",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.18.0",
+    "gpu": "NVIDIA L4"
+  },
+  "results": {
+    "Qwen2.5-0.5B": {
+      "mmlu": {
+        "accuracy": 0.47172767412049565,
+        "accuracy_norm": 0.47172767412049565,
+        "accuracy_macro": 0.4902621046291419,
+        "ci95": [
+          0.46325309784930924,
+          0.47977496083179033
+        ],
+        "n": 14042,
+        "seconds": 1.5,
+        "primary_metric": "accuracy"
+      },
+      "arc_challenge": {
+        "accuracy": 0.29266211604095566,
+        "accuracy_norm": 0.3191126279863481,
+        "ci95": [
+          0.26706484641638223,
+          0.318259385665529
+        ],
+        "n": 1172,
+        "seconds": 0.1,
+        "primary_metric": "accuracy"
+      },
+      "hellaswag": {
+        "accuracy": 0.4047002589125672,
+        "accuracy_norm": 0.5222067317267477,
+        "ci95": [
+          0.5123481378211512,
+          0.5321649073889664
+        ],
+        "n": 10042,
+        "seconds": 1.2,
+        "primary_metric": "accuracy_norm"
+      }
+    }
+  }
+}

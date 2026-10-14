@@ -1,0 +1,70 @@
+{
+  "run_name": "qwen25_scaling",
+  "environment": {
+    "evalkit": "0.1.0",
+    "python": "3.13.15",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "git_sha": "a9a0c099e1b40b909cdd1dc57d04a67e9b2ee1f5",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.18.0",
+    "gpu": "NVIDIA L4"
+  },
+  "results": {
+    "Qwen/Qwen2.5-0.5B-Instruct": {
+      "mmlu": {
+        "accuracy": 0.469377581541091,
+        "accuracy_norm": 0.469377581541091,
+        "accuracy_macro": 0.48426435455917866,
+        "ci95": [
+          0.4611166500498505,
+          0.47756729810568294
+        ],
+        "n": 14042,
+        "seconds": 4.4,
+        "primary_metric": "accuracy"
+      },
+      "arc_challenge": {
+        "accuracy": 0.3054607508532423,
+        "accuracy_norm": 0.3361774744027304,
+        "ci95": [
+          0.27986348122866894,
+          0.3310580204778157
+        ],
+        "n": 1172,
+        "seconds": 0.1,
+        "primary_metric": "accuracy"
+      },
+      "hellaswag": {
+        "accuracy": 0.40529774945230035,
+        "accuracy_norm": 0.5259908384783908,
+        "ci95": [
+          0.5162318263294164,
+          0.535749850627365
+        ],
+        "n": 10042,
+        "seconds": 1.1,
+        "primary_metric": "accuracy_norm"
+      },
+      "gsm8k": {
+        "accuracy": 0.40106141015921154,
+        "ci95": [
+          0.37452615617892343,
+          0.4275966641394996
+        ],
+        "n": 1319,
+        "seconds": 0.1,
+        "primary_metric": "accuracy"
+      },
+      "humaneval": {
+        "pass@1": 0.2682926829268293,
+        "ci95": [
+          0.20121951219512196,
+          0.3353658536585366
+        ],
+        "n": 164,
+        "seconds": 29.9,
+        "primary_metric": "pass@1"
+      }
+    }
+  }
+}

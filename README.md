@@ -11,7 +11,33 @@ Benchmarks for large language models with the statistics most leaderboards leave
 <!-- RESULTS:START -->
 ## Results
 
-_The Colab runs for this section are in progress. This section will hold: the validation against lm-evaluation-harness, Qwen2.5 0.5B → 7B scaling on MMLU / ARC / HellaSwag / GSM8K / HumanEval, prompt sensitivity, and the LLM-judge position-bias study._
+Runs on a Google Colab L4. Raw summaries are in [`results/colab/`](results/colab).
+
+### Validation against EleutherAI's lm-evaluation-harness
+
+Same model (Qwen2.5-0.5B base), 0-shot, bf16, full test sets. The lm-evaluation-harness numbers come from running `lm_eval --model hf` on this model in the [mini-chatgpt](https://github.com/kishorhange111/mini-chatgpt) project.
+
+| Metric | lm-evaluation-harness | evalkit | Difference (points) |
+|---|---:|---:|---:|
+| MMLU, acc (14,042 questions) | 47.49 | 47.17 | −0.32 |
+| ARC-Challenge, acc | 29.35 | 29.27 | −0.08 |
+| ARC-Challenge, acc_norm | 32.34 | 31.91 | −0.43 |
+| HellaSwag, acc | 40.53 | 40.47 | −0.06 |
+| HellaSwag, acc_norm | 52.15 | 52.22 | +0.07 |
+
+Every difference is under half a point and well inside each score's 95 % confidence interval (±0.8 points on MMLU, ±2.6 on ARC), so the scoring (tokenisation boundary, BOS handling, length normalisation) matches the reference implementation.
+
+### Qwen2.5-0.5B-Instruct, full suite with 95 % bootstrap confidence intervals
+
+| Benchmark | Score (%) | 95 % CI | n |
+|---|---:|---:|---:|
+| MMLU (5-shot), accuracy | 46.9 | 46.1 – 47.8 | 14,042 |
+| ARC-Challenge (0-shot), accuracy | 30.5 | 28.0 – 33.1 | 1,172 |
+| HellaSwag (0-shot), acc_norm | 52.6 | 51.6 – 53.6 | 10,042 |
+| GSM8K (chat, 0-shot), exact match | 40.1 | 37.5 – 42.8 | 1,319 |
+| HumanEval (chat), pass@1 | 26.8 | 20.1 – 33.5 | 164 |
+
+The intervals show why small benchmarks need care: HumanEval has only 164 problems, so its interval spans 13 points, and two models 5 points apart on it are not reliably different. The planned scaling study (1.5B, 3B and 7B), prompt-sensitivity and LLM-judge experiments were not completed: the Colab runtime kept disconnecting before the larger models finished. The configs are in `configs/` and resume from the response cache.
 <!-- RESULTS:END -->
 
 ## What it does
