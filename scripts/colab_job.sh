@@ -17,9 +17,9 @@ DIR=/content/llm-evaluation-harness
 trap 'tar --exclude="*.sqlite" -czf /content/results.tgz -C "$DIR" results 2>/dev/null; echo "packed results ($(date -u +%T))"' EXIT
 set -e
 
-# Clone once, then update in place, so a re-run reuses the downloaded models and the cache.
-if [ ! -d "$DIR" ]; then
-  git clone --depth 1 -b "$BRANCH" "$REPO" "$DIR"
+# Clone into place even if DIR already holds restored results/checkpoints (a resumed runtime).
+if [ ! -d "$DIR/.git" ]; then
+  mkdir -p "$DIR" && git clone --depth 1 -b "$BRANCH" "$REPO" /content/_clone && cp -a /content/_clone/. "$DIR"/ && rm -rf /content/_clone
 else
   git -C "$DIR" fetch --depth 1 origin "$BRANCH" && git -C "$DIR" reset --hard FETCH_HEAD
 fi
