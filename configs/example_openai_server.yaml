@@ -1,0 +1,9 @@
+# Evaluate a model served by vLLM (or any OpenAI-compatible server):
+#   vllm serve Qwen/Qwen2.5-7B-Instruct --port 8000
+#   evalkit run configs/example_openai_server.yaml
+run_name: vllm_server
+models:
+  - {backend: openai, model: Qwen/Qwen2.5-7B-Instruct, base_url: "http://localhost:8000/v1", concurrency: 64}
+tasks:
+  - {name: gsm8k, chat: false, num_fewshot: 8}
+  - {name: jsonl_qa, data_files: tests/fixtures/qa.jsonl}

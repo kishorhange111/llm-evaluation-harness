@@ -1,0 +1,5 @@
+{"split": "train", "question": "Tom has 2 apples and buys 3 more. How many?", "answer": "2+3=<<2+3=5>>5\n#### 5"}
+{"split": "train", "question": "A box has 4 pens; 2 boxes?", "answer": "4*2=<<4*2=8>>8\n#### 8"}
+{"split": "test", "question": "Sara has 10 cookies and eats 4. How many are left?", "answer": "10-4=6\n#### 6"}
+{"split": "test", "question": "A train travels 60 km/h for 2 hours. How far?", "answer": "60*2=120\n#### 120"}
+{"split": "test", "question": "What is 1,000 + 234?", "answer": "#### 1,234"}
