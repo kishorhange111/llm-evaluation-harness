@@ -105,17 +105,22 @@ On Google Colab, `scripts/colab_job.sh` clones the repo, installs it and runs an
 ## Project layout
 
 ```
-src/evalkit/
-├── models/        hf.py (local), openai_compat.py (served), dummy.py (tests)
-├── tasks/         mmlu / arc / hellaswag, gsm8k, humaneval, custom JSONL
-├── metrics/       text matching, bootstrap + McNemar, pass@k, LLM judge
-├── sandbox.py     isolated code execution
-├── cache.py       SQLite response cache
-├── runner.py      config → results, CIs, paired tests
-└── cli.py         evalkit run | list | report
-configs/           smoke, scaling, prompt sensitivity, lm-eval validation
-scripts/           Colab job, judge experiment, lm-eval comparison
-tests/             CPU-only tests, including a tiny GPT-2 built locally
+llm-evaluation-harness/
+├── src/evalkit/                # the harness (installable package, `evalkit` CLI)
+│   ├── models/                 #   hf.py (local), openai_compat.py (served), dummy.py (tests)
+│   ├── tasks/                  #   mmlu / arc / hellaswag, gsm8k, humaneval, custom JSONL
+│   ├── metrics/                #   text matching, bootstrap + McNemar, pass@k, LLM judge
+│   ├── sandbox.py              #   isolated code execution
+│   ├── cache.py                #   SQLite response cache
+│   ├── runner.py               #   config → results, CIs, paired tests
+│   └── cli.py                  #   evalkit run | list | report
+├── configs/                    # smoke, scaling, prompt sensitivity, lm-eval validation
+├── scripts/                    # Colab job, judge experiment, lm-eval comparison
+├── results/colab/              # raw result files behind every number above
+├── tests/                      # CPU-only tests, including a tiny GPT-2 built locally
+├── .github/workflows/ci.yml    # lint + tests on every push and pull request
+├── Makefile                    # make install / install-dev / lint / test / smoke
+└── pyproject.toml              # package metadata, dependencies, ruff + pytest config
 ```
 
 ## Tests
@@ -126,6 +131,8 @@ pytest
 ```
 
 The tests run on CPU without downloads. They cover batched log-likelihoods against an unpadded reference computation, batched generation against unbatched, token-budget batching, metric formulas checked by hand, the sandbox (timeouts, memory cap, thread safety, environment isolation), the judge's position-swap logic and the cache.
+
+`make check` runs the same lint and test steps as CI, and `make help` lists the other commands. Optionally, `pip install pre-commit && pre-commit install` runs ruff before every commit.
 
 ## Limitations
 
