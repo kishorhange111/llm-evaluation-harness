@@ -28,8 +28,9 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("list", help="list available tasks")
 
-    p_rep = sub.add_parser("report", help="re-render report.md for a finished run")
+    p_rep = sub.add_parser("report", help="render report.md/html/json for a finished run")
     p_rep.add_argument("run_dir")
+    p_rep.add_argument("--format", choices=["markdown", "html", "json", "all"], default="markdown", help="report output format")
 
     p_cmp = sub.add_parser("compare", help="compare candidate run vs baseline and gate regressions")
     p_cmp.add_argument("baseline", help="baseline run dir or summary.json")
@@ -105,14 +106,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "report":
-        from evalkit.report import render_markdown
+        from evalkit.report import write_reports
 
-        run_dir = Path(args.run_dir)
-        summary = json.loads((run_dir / "summary.json").read_text())
-        comp_path = run_dir / "comparisons.json"
-        comparisons = json.loads(comp_path.read_text()) if comp_path.exists() else None
-        (run_dir / "report.md").write_text(render_markdown(summary, comparisons))
-        print(run_dir / "report.md")
+        fmts = ("markdown", "html", "json") if args.format == "all" else (args.format,)
+        written = write_reports(args.run_dir, formats=fmts)
+        for p in written.values():
+            print(p)
         return 0
 
     from evalkit.runner import run
