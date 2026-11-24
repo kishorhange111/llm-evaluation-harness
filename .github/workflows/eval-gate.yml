@@ -1,0 +1,38 @@
+name: Eval Gate
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "configs/ci_gate.yaml"
+      - "benchmarks/**"
+      - "action.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eval-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  eval-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pick baseline (committed benchmarks/baseline when present)
+        id: baseline
+        run: |
+          if [ -f benchmarks/baseline/summary.json ]; then
+            echo "path=benchmarks/baseline" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run offline eval gate
+        uses: ./
+        with:
+          config: configs/ci_gate.yaml
+          baseline: ${{ steps.baseline.outputs.path }}
+          max-drop: "0.02"
+          output-dir: eval-results

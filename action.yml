@@ -1,0 +1,109 @@
+name: "evalkit eval gate"
+description: "Run an evalkit evaluation config, render reports, and fail the job on regressions versus a baseline run."
+author: "Kishor Hange"
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  config:
+    description: "Path to the evalkit YAML config to run."
+    required: true
+  baseline:
+    description: "Optional baseline run dir or summary.json. When set, the job fails on regressions."
+    required: false
+    default: ""
+  max-drop:
+    description: "Maximum allowed score drop (absolute, 0-1) per task before the gate fails."
+    required: false
+    default: "0.02"
+  min-score:
+    description: "Optional absolute minimum score floor applied to every task."
+    required: false
+    default: ""
+  output-dir:
+    description: "Directory where run results are written."
+    required: false
+    default: "eval-results"
+  python-version:
+    description: "Python version used to run evalkit."
+    required: false
+    default: "3.12"
+  install-command:
+    description: "Command used to install evalkit (run from the action repository root)."
+    required: false
+    default: "pip install ."
+  limit:
+    description: "Optional per-task example limit for quick smoke gates."
+    required: false
+    default: ""
+
+outputs:
+  passed:
+    description: "'true' when the regression gate passed (or no baseline was given)."
+    value: ${{ steps.gate.outputs.passed }}
+  results-dir:
+    description: "Directory containing summary.json, report.md, report.html and report.json."
+    value: ${{ inputs.output-dir }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install evalkit
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: ${{ inputs.install-command }}
+
+    - name: Run evaluation
+      shell: bash
+      env:
+        EVAL_CONFIG: ${{ inputs.config }}
+        EVAL_OUT: ${{ inputs.output-dir }}
+        EVAL_LIMIT: ${{ inputs.limit }}
+      run: |
+        args=(run "$EVAL_CONFIG" --output-dir "$EVAL_OUT")
+        if [ -n "$EVAL_LIMIT" ]; then args+=(--limit "$EVAL_LIMIT"); fi
+        evalkit "${args[@]}"
+
+    - name: Render reports
+      shell: bash
+      env:
+        EVAL_OUT: ${{ inputs.output-dir }}
+      run: evalkit report "$EVAL_OUT" --format all
+
+    - name: Regression gate
+      id: gate
+      shell: bash
+      env:
+        EVAL_OUT: ${{ inputs.output-dir }}
+        EVAL_BASELINE: ${{ inputs.baseline }}
+        EVAL_MAX_DROP: ${{ inputs.max-drop }}
+        EVAL_MIN_SCORE: ${{ inputs.min-score }}
+      run: |
+        if [ -z "$EVAL_BASELINE" ]; then
+          echo "No baseline supplied; skipping regression gate."
+          echo "passed=true" >> "$GITHUB_OUTPUT"
+          cat "$EVAL_OUT/report.md" >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        fi
+        args=(compare "$EVAL_BASELINE" "$EVAL_OUT" --max-drop "$EVAL_MAX_DROP" --markdown-out "$EVAL_OUT/gate.md")
+        if [ -n "$EVAL_MIN_SCORE" ]; then args+=(--min-score "$EVAL_MIN_SCORE"); fi
+        set +e
+        evalkit "${args[@]}" > /dev/null
+        code=$?
+        set -e
+        cat "$EVAL_OUT/gate.md" >> "$GITHUB_STEP_SUMMARY"
+        if [ "$code" -eq 0 ]; then echo "passed=true" >> "$GITHUB_OUTPUT"; else echo "passed=false" >> "$GITHUB_OUTPUT"; fi
+        exit "$code"
+
+    - name: Upload eval results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: evalkit-results
+        path: ${{ inputs.output-dir }}
+        if-no-files-found: ignore
