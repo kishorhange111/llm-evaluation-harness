@@ -95,6 +95,19 @@ The first model is the baseline for the paired tests. To evaluate a model behind
 
 On Google Colab, `scripts/colab_job.sh` clones the repo, installs it and runs any list of configs; results are packed into `/content/results.tgz` even if a step fails.
 
+## CLI at a glance
+
+```bash
+evalkit run configs/ci_gate.yaml --output-dir eval-results      # offline, deterministic run
+evalkit report eval-results --format all                        # report.md / report.html / report.json
+evalkit compare benchmarks/baseline eval-results --max-drop 0.02 # blocking regression gate
+evalkit dataset manifest data/qa.jsonl --out manifest.json       # SHA-256 dataset manifest
+evalkit dataset verify data/qa.jsonl manifest.json               # detect dataset drift
+evalkit dataset diff old.jsonl new.jsonl                         # row-level dataset diff
+```
+
+Beyond the benchmark harness, evalkit includes evaluators for RAG (faithfulness, answer relevance, context precision/recall), agent trajectories and tool calls, JSON-schema adherence, prompt-injection / jailbreak / PII red-teaming, a calibrated rubric judge, pairwise Elo / Bradley-Terry arenas, MLflow and OpenTelemetry exporters, and a reusable [GitHub Action](docs/github-action.md) that fails a PR on regression. See [docs/architecture.md](docs/architecture.md) and the [ADRs](docs/adr).
+
 ## Correctness details that change scores
 
 - **Tokenisation boundary.** `tok(context + continuation)` is not `tok(context) + tok(continuation)` for BPE tokenisers. Continuation tokens are taken from the joined string, and a trailing space moves from the context to the continuation (`"Answer:" + " B"`).
@@ -113,8 +126,11 @@ llm-evaluation-harness/
 │   ├── sandbox.py              #   isolated code execution
 │   ├── cache.py                #   SQLite response cache
 │   ├── runner.py               #   config → results, CIs, paired tests
-│   └── cli.py                  #   evalkit run | list | report
+│   └── cli.py                  #   evalkit run | list | report | compare | dataset
 ├── configs/                    # smoke, scaling, prompt sensitivity, lm-eval validation
+├── docs/                       # architecture, ADRs, GitHub Action guide
+├── benchmarks/baseline/        # committed offline baseline for the CI gate
+├── action.yml                  # reusable composite GitHub Action
 ├── scripts/                    # Colab job, judge experiment, lm-eval comparison
 ├── results/colab/              # raw result files behind every number above
 ├── tests/                      # CPU-only tests, including a tiny GPT-2 built locally
