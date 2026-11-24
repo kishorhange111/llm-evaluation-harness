@@ -31,6 +31,7 @@ from evalkit import __version__
 from evalkit.cache import CachedModel
 from evalkit.metrics.stats import bootstrap_ci, mcnemar_test, paired_bootstrap
 from evalkit.models import Model, build_model
+from evalkit.registry import RunnerHook
 from evalkit.tasks import build_task
 from evalkit.types import ExampleResult
 
@@ -130,22 +131,32 @@ def free_model(model: Model) -> None:
         pass
 
 
-def run(config: dict[str, Any], output_dir: str | Path | None = None) -> dict[str, Any]:
+def run(
+    config: dict[str, Any],
+    output_dir: str | Path | None = None,
+    hooks: list[RunnerHook] | None = None,
+) -> dict[str, Any]:
     """Execute a full evaluation config and write everything to ``output_dir``.
 
     Args:
         config: Parsed YAML with ``models`` and ``tasks`` lists (see ``configs/``).
         output_dir: Overrides ``config["output_dir"]``.
+        hooks: Optional lifecycle hooks notified around the run and each task.
 
     Returns:
         The summary dict that is also written to ``summary.json``.
     """
+    active_hooks = list(hooks or [])
     out = Path(output_dir or config.get("output_dir") or f"results/{config.get('run_name', 'run')}")
     (out / "samples").mkdir(parents=True, exist_ok=True)
     # Round-trip through JSON so non-serialisable values (e.g. a test's Python callable) become strings.
     (out / "config.yaml").write_text(yaml.safe_dump(json.loads(json.dumps(config, default=repr)), sort_keys=False))
 
-    summary: dict[str, Any] = {"run_name": config.get("run_name", out.name), "environment": environment_info(), "results": {}}
+    run_name = config.get("run_name", out.name)
+    for hook in active_hooks:
+        hook.on_run_start(run_name, config)
+
+    summary: dict[str, Any] = {"run_name": run_name, "environment": environment_info(), "results": {}}
     per_model: dict[str, dict[str, list[ExampleResult]]] = {}
 
     for model_spec in config["models"]:
@@ -159,9 +170,14 @@ def run(config: dict[str, Any], output_dir: str | Path | None = None) -> dict[st
         summary["results"][display] = {}
 
         for task_spec in config["tasks"]:
+            task_label = task_spec.get("label") or task_spec["name"]
+            for hook in active_hooks:
+                hook.on_task_start(display, task_label, task_spec)
             label, results, metrics = run_task(model, task_spec)
             per_model[display][label] = results
             summary["results"][display][label] = metrics
+            for hook in active_hooks:
+                hook.on_task_end(display, label, metrics)
             # Write per-example records immediately: if a later task crashes, this one is kept.
             with open(out / "samples" / f"{slug(display)}__{slug(label)}.jsonl", "w") as f:
                 for r in results:
@@ -175,4 +191,6 @@ def run(config: dict[str, Any], output_dir: str | Path | None = None) -> dict[st
     from evalkit.report import render_markdown
 
     (out / "report.md").write_text(render_markdown(summary, comparisons))
+    for hook in active_hooks:
+        hook.on_run_end(summary, comparisons)
     return summary
