@@ -4,6 +4,7 @@ Sub-commands:
     run      Evaluate the models and tasks listed in a YAML config.
     list     Show the registered tasks.
     report   Re-render report.md from an existing run folder (no model calls).
+    compare  Compare a candidate run against a baseline with regression thresholds.
     dataset  Build/verify golden dataset manifests and diff dataset versions.
 """
 
@@ -30,6 +31,15 @@ def main(argv: list[str] | None = None) -> int:
     p_rep = sub.add_parser("report", help="re-render report.md for a finished run")
     p_rep.add_argument("run_dir")
 
+    p_cmp = sub.add_parser("compare", help="compare candidate run vs baseline and gate regressions")
+    p_cmp.add_argument("baseline", help="baseline run dir or summary.json")
+    p_cmp.add_argument("candidate", help="candidate run dir or summary.json")
+    p_cmp.add_argument("--max-drop", type=float, default=0.02, help="maximum allowed score drop before failing")
+    p_cmp.add_argument("--min-score", type=float, default=None, help="optional absolute minimum score floor")
+    p_cmp.add_argument("--rules", help="optional YAML file defining per-task RegressionRule entries")
+    p_cmp.add_argument("--json", action="store_true", dest="as_json", help="emit JSON output")
+    p_cmp.add_argument("--markdown-out", help="optional path to write the Markdown gate report")
+
     p_ds = sub.add_parser("dataset", help="golden dataset manifest, verification, and diff")
     ds_sub = p_ds.add_subparsers(dest="dataset_command", required=True)
 
@@ -50,6 +60,23 @@ def main(argv: list[str] | None = None) -> int:
     p_ds_diff.add_argument("--json", action="store_true", dest="as_json", help="output JSON instead of Markdown")
 
     args = parser.parse_args(argv)
+
+    if args.command == "compare":
+        from evalkit.regression import RegressionRule, compare_runs
+
+        rules: list[RegressionRule] = []
+        if args.rules:
+            raw_rules = yaml.safe_load(Path(args.rules).read_text(encoding="utf-8")) or []
+            rules = [RegressionRule(**r) for r in raw_rules]
+        elif args.min_score is not None:
+            rules = [RegressionRule(task="*", max_drop=args.max_drop, min_score=args.min_score)]
+
+        report = compare_runs(args.baseline, args.candidate, rules=rules, default_max_drop=args.max_drop)
+        md = report.to_markdown()
+        if args.markdown_out:
+            Path(args.markdown_out).write_text(md, encoding="utf-8")
+        print(json.dumps(report.to_dict(), indent=2) if args.as_json else md)
+        return 0 if report.passed else 1
 
     if args.command == "dataset":
         from dataclasses import asdict
