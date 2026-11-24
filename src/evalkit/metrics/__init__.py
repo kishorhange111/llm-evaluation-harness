@@ -14,18 +14,39 @@ from evalkit.metrics.rag import (
 )
 from evalkit.metrics.stats import Estimate, bootstrap_ci, mcnemar_test, paired_bootstrap
 from evalkit.metrics.text import exact_match, extract_choice_letter, extract_final_number, normalize_text, token_f1
+from evalkit.metrics.trajectory import (
+    AgentTrajectoryTask,
+    ToolCall,
+    Trajectory,
+    TrajectoryReference,
+    TrajectoryScore,
+    argument_accuracy,
+    evaluate_trajectory,
+    evaluate_trajectory_batch,
+    sequence_accuracy,
+    step_efficiency,
+    tool_name_f1,
+)
 
 __all__ = [
+    "AgentTrajectoryTask",
     "Estimate",
     "RAGEvalTask",
     "RAGSample",
     "RAGScore",
+    "ToolCall",
+    "Trajectory",
+    "TrajectoryReference",
+    "TrajectoryScore",
     "answer_relevance",
+    "argument_accuracy",
     "bootstrap_ci",
     "context_precision",
     "context_recall",
     "evaluate_rag_batch",
     "evaluate_rag_sample",
+    "evaluate_trajectory",
+    "evaluate_trajectory_batch",
     "exact_match",
     "extract_choice_letter",
     "extract_final_number",
@@ -34,5 +55,8 @@ __all__ = [
     "normalize_text",
     "paired_bootstrap",
     "pass_at_k",
+    "sequence_accuracy",
+    "step_efficiency",
     "token_f1",
+    "tool_name_f1",
 ]
