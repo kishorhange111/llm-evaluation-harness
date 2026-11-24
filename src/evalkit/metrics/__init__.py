@@ -12,6 +12,13 @@ from evalkit.metrics.rag import (
     evaluate_rag_sample,
     faithfulness,
 )
+from evalkit.metrics.schema import (
+    StructuredJsonTask,
+    ValidationResult,
+    evaluate_structured_output,
+    extract_json,
+    validate_json_schema,
+)
 from evalkit.metrics.stats import Estimate, bootstrap_ci, mcnemar_test, paired_bootstrap
 from evalkit.metrics.text import exact_match, extract_choice_letter, extract_final_number, normalize_text, token_f1
 from evalkit.metrics.trajectory import (
@@ -34,10 +41,12 @@ __all__ = [
     "RAGEvalTask",
     "RAGSample",
     "RAGScore",
+    "StructuredJsonTask",
     "ToolCall",
     "Trajectory",
     "TrajectoryReference",
     "TrajectoryScore",
+    "ValidationResult",
     "answer_relevance",
     "argument_accuracy",
     "bootstrap_ci",
@@ -45,11 +54,13 @@ __all__ = [
     "context_recall",
     "evaluate_rag_batch",
     "evaluate_rag_sample",
+    "evaluate_structured_output",
     "evaluate_trajectory",
     "evaluate_trajectory_batch",
     "exact_match",
     "extract_choice_letter",
     "extract_final_number",
+    "extract_json",
     "faithfulness",
     "mcnemar_test",
     "normalize_text",
@@ -59,4 +70,5 @@ __all__ = [
     "step_efficiency",
     "token_f1",
     "tool_name_f1",
+    "validate_json_schema",
 ]
