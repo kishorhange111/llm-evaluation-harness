@@ -6,6 +6,32 @@ from typing import Any
 
 from evalkit.models.base import Model
 from evalkit.models.dummy import DummyModel
+from evalkit.registry import MODEL_REGISTRY, register_model
+
+
+def _build_hf(**spec: Any) -> Model:
+    from evalkit.models.hf import HFModel
+
+    return HFModel(**spec)
+
+
+def _build_openai(**spec: Any) -> Model:
+    from evalkit.models.openai_compat import OpenAICompatibleModel
+
+    return OpenAICompatibleModel(**spec)
+
+
+def _build_dummy(**spec: Any) -> Model:
+    return DummyModel(**spec)
+
+
+for _name, _factory, _desc in (
+    ("hf", _build_hf, "Local Hugging Face transformers model backend."),
+    ("openai", _build_openai, "OpenAI-compatible HTTP inference server backend."),
+    ("dummy", _build_dummy, "Deterministic offline mock model backend."),
+):
+    if _name not in MODEL_REGISTRY:
+        MODEL_REGISTRY.register(_name, _factory, category="model", description=_desc)
 
 
 def build_model(spec: dict[str, Any]) -> Model:
@@ -16,17 +42,8 @@ def build_model(spec: dict[str, Any]) -> Model:
     """
     spec = dict(spec)
     backend = spec.pop("backend")
-    if backend == "hf":
-        from evalkit.models.hf import HFModel
-
-        return HFModel(**spec)
-    if backend == "openai":
-        from evalkit.models.openai_compat import OpenAICompatibleModel
-
-        return OpenAICompatibleModel(**spec)
-    if backend == "dummy":
-        return DummyModel(**spec)
-    raise ValueError(f"unknown backend {backend!r} (expected hf, openai or dummy)")
+    factory = MODEL_REGISTRY.get(backend)
+    return factory(**spec)
 
 
-__all__ = ["Model", "DummyModel", "build_model"]
+__all__ = ["Model", "DummyModel", "MODEL_REGISTRY", "build_model", "register_model"]
