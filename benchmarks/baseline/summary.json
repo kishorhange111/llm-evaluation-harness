@@ -1,0 +1,24 @@
+{
+  "run_name": "ci-gate",
+  "environment": {
+    "evalkit": "0.1.0",
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "git_sha": "16301aed265869630798c9c57d333456fbd716b1"
+  },
+  "results": {
+    "ci-dummy": {
+      "faq": {
+        "exact_match": 0.0,
+        "f1": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n": 2,
+        "seconds": 0.0,
+        "primary_metric": "exact_match"
+      }
+    }
+  }
+}
