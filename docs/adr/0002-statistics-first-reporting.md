@@ -9,4 +9,4 @@ Single-number leaderboards hide noise: HumanEval has 164 problems, so a 5-point 
 Scores are reported with a 95 % bootstrap interval (BCa where sample size allows). Model comparisons use paired bootstrap and McNemar's test on per-example scores. Reports show intervals next to every number.
 
 ## Consequences
-Runs cost slightly more CPU time; readers can tell signal from noise. Arena results use Elo/Bradley-Terry with bootstrapped ratings for the same reason.
+Runs cost slightly more CPU time; readers can tell signal from noise. Arena results use order-invariant Elo and Bradley-Terry ratings.

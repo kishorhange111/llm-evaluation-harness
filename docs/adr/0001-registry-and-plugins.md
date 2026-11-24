@@ -9,4 +9,4 @@ Benchmarks (MMLU, GSM8K, HumanEval, custom JSONL) and evaluators (RAG, trajector
 A small registry (`evalkit.registry`) maps names to task and evaluator classes. Built-ins register on import and third-party packages can register through Python entry points. The runner only knows the registry interface.
 
 ## Consequences
-New evaluators are added without touching the runner; the cost is a global registry, so tests register into isolated copies.
+New evaluators are added without touching the runner; the cost is a global registry,.
