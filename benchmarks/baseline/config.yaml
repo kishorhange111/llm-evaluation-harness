@@ -1,0 +1,9 @@
+run_name: ci-gate
+cache: false
+models:
+- backend: dummy
+  name: ci-dummy
+tasks:
+- name: jsonl_qa
+  data_files: tests/fixtures/qa.jsonl
+  label: faq
