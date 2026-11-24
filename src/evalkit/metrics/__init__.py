@@ -12,6 +12,16 @@ from evalkit.metrics.rag import (
     evaluate_rag_sample,
     faithfulness,
 )
+from evalkit.metrics.redteam import (
+    DEFAULT_REDTEAM_PROBES,
+    RedTeamOutcome,
+    RedTeamProbe,
+    RedTeamTask,
+    detect_pii,
+    detect_refusal,
+    evaluate_probe,
+    evaluate_redteam_suite,
+)
 from evalkit.metrics.schema import (
     StructuredJsonTask,
     ValidationResult,
@@ -37,10 +47,14 @@ from evalkit.metrics.trajectory import (
 
 __all__ = [
     "AgentTrajectoryTask",
+    "DEFAULT_REDTEAM_PROBES",
     "Estimate",
     "RAGEvalTask",
     "RAGSample",
     "RAGScore",
+    "RedTeamOutcome",
+    "RedTeamProbe",
+    "RedTeamTask",
     "StructuredJsonTask",
     "ToolCall",
     "Trajectory",
@@ -52,8 +66,12 @@ __all__ = [
     "bootstrap_ci",
     "context_precision",
     "context_recall",
+    "detect_pii",
+    "detect_refusal",
+    "evaluate_probe",
     "evaluate_rag_batch",
     "evaluate_rag_sample",
+    "evaluate_redteam_suite",
     "evaluate_structured_output",
     "evaluate_trajectory",
     "evaluate_trajectory_batch",
